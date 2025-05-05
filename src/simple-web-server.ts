@@ -14,7 +14,21 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Serve the main HTML file
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/simple.html'));
+  // Read the HTML file
+  const filePath = path.join(__dirname, '../public/game-browser.html');
+  let html = require('fs').readFileSync(filePath, 'utf8');
+
+  // Get MCP server URL from environment variable or use default
+  const mcpServerUrl = process.env.MCP_SERVER_URL || 'http://localhost:3001';
+
+  // Inject the MCP server URL
+  html = html.replace(
+    '<head>',
+    `<head>\n  <script>window.MCP_SERVER_URL = "${mcpServerUrl}";</script>`
+  );
+
+  // Send the modified HTML
+  res.send(html);
 });
 
 // Serve the game browser
