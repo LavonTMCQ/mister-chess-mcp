@@ -1,0 +1,184 @@
+{
+  "name": "Chess MCP Server",
+  "url": "https://mister-chess-mcp-production.up.railway.app/mcp",
+  "transport": "streamable-http",
+  "description": "A Model Context Protocol server for playing chess games",
+  "tools": [
+    {
+      "name": "connect_chess_platform",
+      "description": "Connect to the chess platform with a unique agent ID",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string",
+            "description": "Agent ID"
+          }
+        },
+        "required": ["agentId"]
+      }
+    },
+    {
+      "name": "create_game",
+      "description": "Create a new chess game",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "createOpenGame": {
+            "type": "boolean",
+            "description": "Create an open game that others can join"
+          },
+          "playerId": {
+            "type": "string",
+            "description": "Player ID"
+          },
+          "playerColor": {
+            "type": "string",
+            "description": "Player color (white or black)"
+          }
+        },
+        "required": ["createOpenGame", "playerId", "playerColor"]
+      }
+    },
+    {
+      "name": "start_game",
+      "description": "Start a chess game",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "gameId": {
+            "type": "string",
+            "description": "Game ID"
+          }
+        },
+        "required": ["gameId"]
+      }
+    },
+    {
+      "name": "get_game_state",
+      "description": "Get the current state of a chess game",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "gameId": {
+            "type": "string",
+            "description": "Game ID"
+          }
+        },
+        "required": ["gameId"]
+      }
+    },
+    {
+      "name": "submit_move",
+      "description": "Submit a move in a chess game",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "gameId": {
+            "type": "string",
+            "description": "Game ID"
+          },
+          "playerId": {
+            "type": "string",
+            "description": "Player ID"
+          },
+          "move": {
+            "type": "object",
+            "description": "Chess move",
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "From square"
+              },
+              "to": {
+                "type": "string",
+                "description": "To square"
+              },
+              "promotion": {
+                "type": "string",
+                "description": "Promotion piece"
+              }
+            },
+            "required": ["from", "to"]
+          }
+        },
+        "required": ["gameId", "playerId", "move"]
+      }
+    },
+    {
+      "name": "wait_for_turn",
+      "description": "Wait for your turn in a chess game",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "gameId": {
+            "type": "string",
+            "description": "Game ID"
+          },
+          "playerId": {
+            "type": "string",
+            "description": "Player ID"
+          }
+        },
+        "required": ["gameId", "playerId"]
+      }
+    },
+    {
+      "name": "get_player_games",
+      "description": "Get all games for a player",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "playerId": {
+            "type": "string",
+            "description": "Player ID"
+          }
+        },
+        "required": ["playerId"]
+      }
+    },
+    {
+      "name": "find_available_game",
+      "description": "Find games that are waiting for players",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "preferredColor": {
+            "type": "string",
+            "description": "Preferred color (white, black, or any)"
+          }
+        }
+      }
+    },
+    {
+      "name": "join_game",
+      "description": "Join an existing game",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "gameId": {
+            "type": "string",
+            "description": "Game ID"
+          },
+          "playerId": {
+            "type": "string",
+            "description": "Player ID"
+          },
+          "color": {
+            "type": "string",
+            "description": "Color to play as (white or black)"
+          }
+        },
+        "required": ["gameId", "playerId"]
+      }
+    },
+    {
+      "name": "get_all_games",
+      "description": "Get all games on the platform",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}

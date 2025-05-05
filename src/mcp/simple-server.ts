@@ -507,6 +507,125 @@ export class ChessSimpleMCPServer {
         });
       }
     });
+
+    // MCP protocol endpoint for SSE transport
+    this.app.get('/mcp/sse', (req, res) => {
+      // Set headers for SSE
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.flushHeaders();
+
+      // Send a comment to keep the connection alive
+      const keepAlive = setInterval(() => {
+        res.write(': keepalive\n\n');
+      }, 15000);
+
+      // Handle client disconnect
+      req.on('close', () => {
+        clearInterval(keepAlive);
+      });
+
+      // Parse the initialize query parameter
+      const initializeParam = req.query.initialize;
+      if (initializeParam) {
+        try {
+          const initialize = JSON.parse(decodeURIComponent(initializeParam as string));
+
+          // Send the initialize response
+          const response = {
+            type: 'initialize_response',
+            id: initialize.id,
+            server: {
+              name: 'Chess MCP Server',
+              version: '1.0.0'
+            },
+            capabilities: {
+              tools: {
+                connect_chess_platform: {
+                  description: 'Connect to the chess platform with a unique agent ID',
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      agentId: {
+                        type: 'string',
+                        description: 'Agent ID'
+                      }
+                    },
+                    required: ['agentId']
+                  }
+                },
+                // Add all other tools here...
+                get_all_games: {
+                  description: 'Get all games on the platform',
+                  parameters: {
+                    type: 'object',
+                    properties: {}
+                  }
+                }
+              }
+            }
+          };
+
+          res.write(`data: ${JSON.stringify(response)}\n\n`);
+        } catch (error) {
+          console.error('Error parsing initialize parameter:', error);
+          res.write(`data: ${JSON.stringify({
+            type: 'error',
+            error: {
+              message: 'Invalid initialize parameter'
+            }
+          })}\n\n`);
+        }
+      }
+
+      // Handle tool calls via query parameters
+      const toolCallParam = req.query.tool_call;
+      if (toolCallParam) {
+        try {
+          const toolCall = JSON.parse(decodeURIComponent(toolCallParam as string));
+          const toolName = toolCall.name;
+          const toolArgs = toolCall.args;
+
+          // Process the tool call
+          let result;
+          switch (toolName) {
+            case 'connect_chess_platform':
+              result = {
+                success: true,
+                message: `Agent ${toolArgs.agentId} connected to the chess platform`,
+                agentId: toolArgs.agentId
+              };
+              break;
+            // Add other tool cases here...
+            default:
+              throw new Error(`Unknown tool: ${toolName}`);
+          }
+
+          // Send the tool call response
+          const response = {
+            type: 'tool_call_response',
+            id: toolCall.id,
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result)
+              }
+            ]
+          };
+
+          res.write(`data: ${JSON.stringify(response)}\n\n`);
+        } catch (error) {
+          console.error('Error processing tool call:', error);
+          res.write(`data: ${JSON.stringify({
+            type: 'error',
+            error: {
+              message: error instanceof Error ? error.message : 'Unknown error'
+            }
+          })}\n\n`);
+        }
+      }
+    });
   }
 
   /**
