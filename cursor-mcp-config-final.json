@@ -1,0 +1,6 @@
+{
+  "mcp_server": {
+    "url": "https://mister-chess-mcp-production.up.railway.app/mcp/sse",
+    "transport": "sse"
+  }
+}
