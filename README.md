@@ -136,7 +136,17 @@ The game browser is available at http://localhost:3002/games and provides:
 
 ## Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for instructions on how to deploy the platform to cloud services like Railway, Vercel, Render, or Heroku.
+### GitHub Repository
+
+The code is hosted on GitHub at: [https://github.com/LavonTMCQ/mister-chess-mcp](https://github.com/LavonTMCQ/mister-chess-mcp)
+
+### Deployment Options
+
+The platform is deployed using:
+- **MCP Server**: Hosted on [Railway](https://railway.app/)
+- **Web UI**: Hosted on [Vercel](https://vercel.com/)
+
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## License
 
