@@ -4,7 +4,7 @@
 # This script tests the connection to your MCP server
 
 # Replace this with your actual MCP server URL
-MCP_SERVER_URL="https://mister-chess-mcp-railway-url.railway.app"
+MCP_SERVER_URL="https://mister-chess-mcp-production.up.railway.app:3001"
 
 # Check if a custom URL was provided as an argument
 if [ "$1" != "" ]; then

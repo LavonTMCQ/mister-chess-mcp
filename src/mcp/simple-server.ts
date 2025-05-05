@@ -22,6 +22,8 @@ export class ChessSimpleMCPServer {
     this.setupRoutes();
   }
 
+
+
   /**
    * Set up Express routes
    */
@@ -176,7 +178,7 @@ export class ChessSimpleMCPServer {
 
             result = {
               success: true,
-              availableGames
+              games: availableGames
             };
             break;
 
@@ -234,6 +236,274 @@ export class ChessSimpleMCPServer {
         res.status(400).json({
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+
+    // MCP protocol endpoint for streamable-http transport
+    this.app.post('/mcp', (req, res) => {
+      const body = req.body;
+
+      if (body.type === 'initialize') {
+        // Handle initialize request
+        res.json({
+          type: 'initialize_response',
+          id: body.id,
+          server: {
+            name: 'Chess MCP Server',
+            version: '1.0.0'
+          },
+          capabilities: {
+            tools: {
+              connect_chess_platform: {
+                description: 'Connect to the chess platform with a unique agent ID',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    agentId: {
+                      type: 'string',
+                      description: 'Agent ID'
+                    }
+                  },
+                  required: ['agentId']
+                }
+              },
+              create_game: {
+                description: 'Create a new chess game',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    createOpenGame: {
+                      type: 'boolean',
+                      description: 'Create an open game that others can join'
+                    },
+                    playerId: {
+                      type: 'string',
+                      description: 'Player ID'
+                    },
+                    playerColor: {
+                      type: 'string',
+                      description: 'Player color (white or black)'
+                    }
+                  },
+                  required: ['createOpenGame', 'playerId', 'playerColor']
+                }
+              },
+              start_game: {
+                description: 'Start a chess game',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    gameId: {
+                      type: 'string',
+                      description: 'Game ID'
+                    }
+                  },
+                  required: ['gameId']
+                }
+              },
+              get_game_state: {
+                description: 'Get the current state of a chess game',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    gameId: {
+                      type: 'string',
+                      description: 'Game ID'
+                    }
+                  },
+                  required: ['gameId']
+                }
+              },
+              submit_move: {
+                description: 'Submit a move in a chess game',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    gameId: {
+                      type: 'string',
+                      description: 'Game ID'
+                    },
+                    playerId: {
+                      type: 'string',
+                      description: 'Player ID'
+                    },
+                    move: {
+                      type: 'object',
+                      description: 'Chess move',
+                      properties: {
+                        from: {
+                          type: 'string',
+                          description: 'From square'
+                        },
+                        to: {
+                          type: 'string',
+                          description: 'To square'
+                        },
+                        promotion: {
+                          type: 'string',
+                          description: 'Promotion piece'
+                        }
+                      },
+                      required: ['from', 'to']
+                    }
+                  },
+                  required: ['gameId', 'playerId', 'move']
+                }
+              },
+              wait_for_turn: {
+                description: 'Wait for your turn in a chess game',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    gameId: {
+                      type: 'string',
+                      description: 'Game ID'
+                    },
+                    playerId: {
+                      type: 'string',
+                      description: 'Player ID'
+                    }
+                  },
+                  required: ['gameId', 'playerId']
+                }
+              },
+              get_player_games: {
+                description: 'Get all games for a player',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    playerId: {
+                      type: 'string',
+                      description: 'Player ID'
+                    }
+                  },
+                  required: ['playerId']
+                }
+              },
+              find_available_game: {
+                description: 'Find games that are waiting for players',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    preferredColor: {
+                      type: 'string',
+                      description: 'Preferred color (white, black, or any)'
+                    }
+                  }
+                }
+              },
+              join_game: {
+                description: 'Join an existing game',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    gameId: {
+                      type: 'string',
+                      description: 'Game ID'
+                    },
+                    playerId: {
+                      type: 'string',
+                      description: 'Player ID'
+                    },
+                    color: {
+                      type: 'string',
+                      description: 'Color to play as (white or black)'
+                    }
+                  },
+                  required: ['gameId', 'playerId']
+                }
+              },
+              get_all_games: {
+                description: 'Get all games on the platform',
+                parameters: {
+                  type: 'object',
+                  properties: {}
+                }
+              }
+            }
+          }
+        });
+      } else if (body.type === 'tool_call') {
+        // Handle tool call request
+        const toolName = body.name;
+        const toolArgs = body.args;
+
+        // Process the tool call directly
+        try {
+          let result;
+
+          switch (toolName) {
+            case 'connect_chess_platform':
+              result = {
+                success: true,
+                message: `Agent ${toolArgs.agentId} connected to the chess platform`,
+                agentId: toolArgs.agentId
+              };
+              break;
+
+            case 'create_game':
+              let game;
+
+              // Check if we're creating an open game
+              if (toolArgs.createOpenGame) {
+                game = this.gameManager.createOpenGame(toolArgs.playerId, toolArgs.playerColor);
+                result = {
+                  success: true,
+                  message: `Open game created with ID ${game.id}. Waiting for a ${toolArgs.playerColor === 'white' ? 'black' : 'white'} player to join.`,
+                  gameId: game.id
+                };
+              } else {
+                // Create a normal game with both players specified
+                game = this.gameManager.createGame(toolArgs.whitePlayerId, toolArgs.blackPlayerId);
+                result = {
+                  success: true,
+                  message: `Game created with ID ${game.id}`,
+                  gameId: game.id
+                };
+              }
+              break;
+
+            // Add other cases for all tools...
+            default:
+              throw new Error(`Unknown tool: ${toolName}`);
+          }
+
+          // Return the result in MCP format
+          res.json({
+            type: 'tool_call_response',
+            id: body.id,
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result)
+              }
+            ]
+          });
+        } catch (error) {
+          res.status(400).json({
+            type: 'tool_call_response',
+            id: body.id,
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  success: false,
+                  error: error instanceof Error ? error.message : 'Unknown error'
+                })
+              }
+            ],
+            isError: true
+          });
+        }
+      } else {
+        // Unknown request type
+        res.status(400).json({
+          type: 'error',
+          id: body.id,
+          error: {
+            message: `Unknown request type: ${body.type}`
+          }
         });
       }
     });

@@ -144,7 +144,7 @@ The code is hosted on GitHub at: [https://github.com/LavonTMCQ/mister-chess-mcp]
 
 The platform is deployed using:
 - **MCP Server**: Hosted on [Railway](https://railway.app/)
-- **Web UI**: Hosted on [Vercel](https://vercel.com/)
+- **Web UI**: Hosted on [Vercel](https://vercel.com/) at [https://mister-chess-mcp.vercel.app/](https://mister-chess-mcp.vercel.app/)
 
 For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 

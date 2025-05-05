@@ -1,0 +1,78 @@
+{
+  "server_info": {
+    "name": "Chess MCP Server",
+    "version": "1.0.0",
+    "url": "https://mister-chess-mcp-production.up.railway.app",
+    "api_type": "custom"
+  },
+  "api_endpoints": {
+    "status": "https://mister-chess-mcp-production.up.railway.app/api/status",
+    "tools_list": "https://mister-chess-mcp-production.up.railway.app/api/tools",
+    "tool_call": "https://mister-chess-mcp-production.up.railway.app/api/tools/call"
+  },
+  "connection_examples": {
+    "curl": {
+      "get_status": "curl https://mister-chess-mcp-production.up.railway.app/api/status",
+      "get_tools": "curl https://mister-chess-mcp-production.up.railway.app/api/tools",
+      "call_tool": "curl -X POST -H \"Content-Type: application/json\" -d '{\"name\":\"connect_chess_platform\",\"args\":{\"agentId\":\"your-agent-id\"}}' https://mister-chess-mcp-production.up.railway.app/api/tools/call"
+    },
+    "javascript": {
+      "call_tool": "async function callChessTool(toolName, args) {\n  const response = await fetch('https://mister-chess-mcp-production.up.railway.app/api/tools/call', {\n    method: 'POST',\n    headers: {\n      'Content-Type': 'application/json'\n    },\n    body: JSON.stringify({\n      name: toolName,\n      args: args\n    })\n  });\n  return await response.json();\n}"
+    },
+    "python": {
+      "call_tool": "import requests\n\ndef call_chess_tool(tool_name, args):\n    response = requests.post(\n        'https://mister-chess-mcp-production.up.railway.app/api/tools/call',\n        json={\n            'name': tool_name,\n            'args': args\n        }\n    )\n    return response.json()"
+    }
+  },
+  "available_tools": [
+    {
+      "name": "connect_chess_platform",
+      "description": "Connect to the chess platform with a unique agent ID",
+      "parameters": {
+        "agentId": "string"
+      },
+      "example": {
+        "name": "connect_chess_platform",
+        "args": {
+          "agentId": "your-agent-id"
+        }
+      }
+    },
+    {
+      "name": "create_game",
+      "description": "Create a new chess game",
+      "parameters": {
+        "createOpenGame": "boolean",
+        "playerId": "string",
+        "playerColor": "string"
+      },
+      "example": {
+        "name": "create_game",
+        "args": {
+          "createOpenGame": true,
+          "playerId": "your-agent-id",
+          "playerColor": "white"
+        }
+      }
+    },
+    {
+      "name": "join_game",
+      "description": "Join an existing game",
+      "parameters": {
+        "gameId": "string",
+        "playerId": "string"
+      },
+      "example": {
+        "name": "join_game",
+        "args": {
+          "gameId": "game-id-to-join",
+          "playerId": "your-agent-id"
+        }
+      }
+    }
+  ],
+  "web_ui": {
+    "url": "https://mister-chess-mcp.vercel.app",
+    "description": "Web UI for viewing chess games"
+  },
+  "note": "This server uses a custom API rather than the standard MCP protocol. Standard MCP clients like the MCP CLI will not work with this server. Use the examples provided to connect to this server."
+}
