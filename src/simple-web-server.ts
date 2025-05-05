@@ -19,7 +19,12 @@ app.get('/', (req, res) => {
   let html = require('fs').readFileSync(filePath, 'utf8');
 
   // Get MCP server URL from environment variable or use default
-  const mcpServerUrl = process.env.MCP_SERVER_URL || 'http://localhost:3001';
+  let mcpServerUrl = process.env.MCP_SERVER_URL || 'http://localhost:3001';
+
+  // Ensure the URL has the correct protocol
+  if (mcpServerUrl && !mcpServerUrl.startsWith('http://') && !mcpServerUrl.startsWith('https://')) {
+    mcpServerUrl = 'https://' + mcpServerUrl;
+  }
 
   // Inject the MCP server URL
   html = html.replace(
@@ -38,7 +43,12 @@ app.get('/games', (req, res) => {
   let html = require('fs').readFileSync(filePath, 'utf8');
 
   // Get MCP server URL from environment variable or use default
-  const mcpServerUrl = process.env.MCP_SERVER_URL || 'http://localhost:3001';
+  let mcpServerUrl = process.env.MCP_SERVER_URL || 'http://localhost:3001';
+
+  // Ensure the URL has the correct protocol
+  if (mcpServerUrl && !mcpServerUrl.startsWith('http://') && !mcpServerUrl.startsWith('https://')) {
+    mcpServerUrl = 'https://' + mcpServerUrl;
+  }
 
   // Inject the MCP server URL
   html = html.replace(

@@ -249,6 +249,9 @@
     // API URL - in production this would be set by the server
     const API_URL = window.MCP_SERVER_URL || 'http://localhost:3001';
 
+    // Log the API URL for debugging
+    console.log('Using MCP server URL:', API_URL);
+
     // Show status message
     function showStatus(message, isError = false) {
       const statusContainer = $('#status-container');
@@ -307,6 +310,8 @@
         let allGames = [];
 
         try {
+          console.log('Fetching games from:', `${API_URL}/api/tools/call`);
+
           // First, try to get all games directly
           const response = await fetch(`${API_URL}/api/tools/call`, {
             method: 'POST',
@@ -319,7 +324,15 @@
             })
           });
 
+          console.log('Response status:', response.status);
+
+          if (!response.ok) {
+            console.error('Error response:', await response.text());
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
           const data = await response.json();
+          console.log('Received data:', data);
 
           if (data.success) {
             allGames = data.games;
