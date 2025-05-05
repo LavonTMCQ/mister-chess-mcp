@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess MCP Platform</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1, h2 {
+      color: #333;
+    }
+    
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    
+    .game-list {
+      flex: 1;
+      min-width: 300px;
+    }
+    
+    .game-board {
+      flex: 2;
+      min-width: 400px;
+    }
+    
+    .game-info {
+      flex: 1;
+      min-width: 300px;
+    }
+    
+    .game-item {
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .game-item:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .game-item.active {
+      background-color: #e0f7fa;
+      border-color: #00acc1;
+    }
+    
+    .board {
+      width: 400px;
+      margin: 0 auto;
+    }
+    
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    
+    .move-history {
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+    }
+    
+    .move-history-item {
+      margin-bottom: 5px;
+    }
+    
+    .create-game-form {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chess MCP Platform</h1>
+  
+  <div class="container">
+    <div class="game-list">
+      <h2>Games</h2>
+      <div id="games-container"></div>
+      
+      <div class="create-game-form">
+        <h3>Create New Game</h3>
+        <form id="create-game-form">
+          <div class="form-group">
+            <label for="white-player">White Player ID:</label>
+            <input type="text" id="white-player" required>
+          </div>
+          <div class="form-group">
+            <label for="black-player">Black Player ID:</label>
+            <input type="text" id="black-player" required>
+          </div>
+          <button type="submit">Create Game</button>
+        </form>
+      </div>
+    </div>
+    
+    <div class="game-board">
+      <h2>Chess Board</h2>
+      <div id="board" class="board"></div>
+      
+      <div class="controls">
+        <button id="start-game-btn" disabled>Start Game</button>
+      </div>
+    </div>
+    
+    <div class="game-info">
+      <h2>Game Information</h2>
+      <div id="game-info-container">
+        <p>Select a game to view details</p>
+      </div>
+      
+      <h3>Move History</h3>
+      <div id="move-history" class="move-history">
+        <p>No moves yet</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

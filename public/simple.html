@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess MCP Platform</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1, h2 {
+      color: #333;
+    }
+    
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    
+    .game-list {
+      flex: 1;
+      min-width: 300px;
+    }
+    
+    .game-board {
+      flex: 2;
+      min-width: 400px;
+    }
+    
+    .game-info {
+      flex: 1;
+      min-width: 300px;
+    }
+    
+    .game-item {
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .game-item:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .game-item.active {
+      background-color: #e0f7fa;
+      border-color: #00acc1;
+    }
+    
+    .board {
+      width: 400px;
+      margin: 0 auto;
+    }
+    
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    
+    .move-history {
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+    }
+    
+    .move-history-item {
+      margin-bottom: 5px;
+    }
+    
+    .create-game-form {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chess MCP Platform</h1>
+  
+  <div class="container">
+    <div class="game-list">
+      <h2>Games</h2>
+      <div id="games-container"></div>
+      
+      <div class="create-game-form">
+        <h3>Create New Game</h3>
+        <form id="create-game-form">
+          <div class="form-group">
+            <label for="white-player">White Player ID:</label>
+            <input type="text" id="white-player" value="agent1" required>
+          </div>
+          <div class="form-group">
+            <label for="black-player">Black Player ID:</label>
+            <input type="text" id="black-player" value="agent2" required>
+          </div>
+          <button type="submit">Create Game</button>
+        </form>
+      </div>
+    </div>
+    
+    <div class="game-board">
+      <h2>Chess Board</h2>
+      <div id="board" class="board"></div>
+      
+      <div class="controls">
+        <button id="start-game-btn" disabled>Start Game</button>
+        <button id="refresh-btn">Refresh Games</button>
+      </div>
+    </div>
+    
+    <div class="game-info">
+      <h2>Game Information</h2>
+      <div id="game-info-container">
+        <p>Select a game to view details</p>
+      </div>
+      
+      <h3>Move History</h3>
+      <div id="move-history" class="move-history">
+        <p>No moves yet</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+  <script>
+    // Game state
+    let games = [];
+    let selectedGame = null;
+    let board = null;
+    let chess = null;
+    
+    // API URL
+    const API_URL = 'http://localhost:3001';
+    
+    // Initialize the chess board
+    function initBoard() {
+      // If a board already exists, destroy it
+      if (board) {
+        board.destroy();
+      }
+      
+      // Create a new board with the starting position
+      const config = {
+        position: 'start',
+        draggable: false,
+        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+      };
+      
+      board = Chessboard('board', config);
+      chess = new Chess();
+      
+      // Resize the board to fit the container
+      $(window).resize(() => {
+        board.resize();
+      });
+    }
+    
+    // Update the board with a game's position
+    function updateBoard(game) {
+      if (!board) {
+        initBoard();
+      }
+      
+      // Update the chess.js instance with the game's FEN
+      chess.load(game.state.fen);
+      
+      // Update the board
+      board.position(game.state.fen);
+    }
+    
+    // Fetch all games from the MCP server
+    async function fetchGames() {
+      try {
+        const response = await fetch(`${API_URL}/api/tools/call`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: 'get_player_games',
+            args: {
+              playerId: 'agent1'
+            }
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          games = data.games;
+          renderGamesList();
+          
+          // Select the first game if available
+          if (games.length > 0 && !selectedGame) {
+            selectGame(games[0]);
+          }
+        } else {
+          console.error('Failed to fetch games:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching games:', error);
+      }
+    }
+    
+    // Render the list of games
+    function renderGamesList() {
+      const container = $('#games-container');
+      container.empty();
+      
+      if (games.length === 0) {
+        container.html('<p>No games available</p>');
+        return;
+      }
+      
+      games.forEach(game => {
+        const gameElement = $('<div>')
+          .addClass('game-item')
+          .attr('data-id', game.id)
+          .html(`
+            <strong>Game ${game.id.substring(0, 8)}...</strong><br>
+            White: ${game.whitePlayer}<br>
+            Black: ${game.blackPlayer}<br>
+            Status: ${game.status}
+          `);
+        
+        if (selectedGame && selectedGame.id === game.id) {
+          gameElement.addClass('active');
+        }
+        
+        gameElement.on('click', () => {
+          selectGame(game);
+        });
+        
+        container.append(gameElement);
+      });
+    }
+    
+    // Render game information
+    function renderGameInfo(game) {
+      const container = $('#game-info-container');
+      container.empty();
+      
+      if (!game) {
+        container.html('<p>Select a game to view details</p>');
+        return;
+      }
+      
+      let resultText = '';
+      if (game.status === 'completed') {
+        if (game.result === 'white') {
+          resultText = 'White won by ' + game.resultReason;
+        } else if (game.result === 'black') {
+          resultText = 'Black won by ' + game.resultReason;
+        } else {
+          resultText = 'Game drawn by ' + game.resultReason;
+        }
+      }
+      
+      container.html(`
+        <p><strong>Game ID:</strong> ${game.id}</p>
+        <p><strong>White Player:</strong> ${game.whitePlayer}</p>
+        <p><strong>Black Player:</strong> ${game.blackPlayer}</p>
+        <p><strong>Status:</strong> ${game.status}</p>
+        <p><strong>Turn:</strong> ${game.state.turn === 'w' ? 'White' : 'Black'}</p>
+        <p><strong>Check:</strong> ${game.state.isCheck ? 'Yes' : 'No'}</p>
+        <p><strong>Game Over:</strong> ${game.state.isGameOver ? 'Yes' : 'No'}</p>
+        ${resultText ? `<p><strong>Result:</strong> ${resultText}</p>` : ''}
+      `);
+      
+      // Update move history
+      renderMoveHistory(game);
+      
+      // Update the start game button
+      const startGameBtn = $('#start-game-btn');
+      startGameBtn.prop('disabled', game.status !== 'waiting');
+    }
+    
+    // Render move history
+    function renderMoveHistory(game) {
+      const container = $('#move-history');
+      container.empty();
+      
+      if (!game || game.state.history.length === 0) {
+        container.html('<p>No moves yet</p>');
+        return;
+      }
+      
+      const movesList = $('<div>');
+      
+      game.state.history.forEach((move, index) => {
+        const moveNumber = Math.floor(index / 2) + 1;
+        const isWhiteMove = index % 2 === 0;
+        
+        const moveText = `${moveNumber}. ${isWhiteMove ? '' : '...'} ${move.from}-${move.to}${move.promotion ? '=' + move.promotion.toUpperCase() : ''}`;
+        
+        const moveElement = $('<div>')
+          .addClass('move-history-item')
+          .text(moveText);
+        
+        movesList.append(moveElement);
+      });
+      
+      container.append(movesList);
+    }
+    
+    // Select a game
+    function selectGame(game) {
+      selectedGame = game;
+      
+      // Update the board
+      updateBoard(game);
+      
+      // Update the game info
+      renderGameInfo(game);
+      
+      // Update the games list to highlight the selected game
+      $('.game-item').removeClass('active');
+      $(`.game-item[data-id="${game.id}"]`).addClass('active');
+    }
+    
+    // Create a new game
+    async function createGame(whitePlayer, blackPlayer) {
+      try {
+        const response = await fetch(`${API_URL}/api/tools/call`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: 'create_game',
+            args: {
+              whitePlayerId: whitePlayer,
+              blackPlayerId: blackPlayer
+            }
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('Game created:', data);
+          fetchGames();
+        } else {
+          console.error('Failed to create game:', data.message);
+          alert('Failed to create game');
+        }
+      } catch (error) {
+        console.error('Error creating game:', error);
+        alert('Failed to create game');
+      }
+    }
+    
+    // Start a game
+    async function startGame(gameId) {
+      try {
+        const response = await fetch(`${API_URL}/api/tools/call`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: 'start_game',
+            args: {
+              gameId
+            }
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('Game started:', data);
+          fetchGames();
+        } else {
+          console.error('Failed to start game:', data.message);
+          alert('Failed to start game');
+        }
+      } catch (error) {
+        console.error('Error starting game:', error);
+        alert('Failed to start game');
+      }
+    }
+    
+    // Initialize the application
+    function init() {
+      // Initialize the board
+      initBoard();
+      
+      // Fetch games
+      fetchGames();
+      
+      // Set up event handlers
+      $('#create-game-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        const whitePlayer = $('#white-player').val();
+        const blackPlayer = $('#black-player').val();
+        
+        createGame(whitePlayer, blackPlayer);
+      });
+      
+      $('#start-game-btn').on('click', function() {
+        if (selectedGame && selectedGame.status === 'waiting') {
+          startGame(selectedGame.id);
+        }
+      });
+      
+      $('#refresh-btn').on('click', function() {
+        fetchGames();
+      });
+      
+      // Set up polling for game updates
+      setInterval(fetchGames, 5000);
+    }
+    
+    // Initialize when the document is ready
+    $(document).ready(init);
+  </script>
+</body>
+</html>

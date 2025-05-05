@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/chess/**/*",
+    "src/web-server.ts",
+    "src/web-index.ts",
+    "src/mcp/simple-server.ts",
+    "src/mcp-simple-server.ts",
+    "src/agent/simple-agent.ts",
+    "src/agent/run-simple-agents.ts",
+    "src/agent/lobby-agent.ts",
+    "src/agent/run-lobby-agents.ts",
+    "src/simple-web-server.ts"
+  ]
+}

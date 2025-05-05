@@ -1,0 +1,45 @@
+{
+  "name": "chess-mister-ada",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "web": "ts-node src/web-index.ts",
+    "web-simple": "ts-node src/simple-web-server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "agents": "ts-node src/agent/run-agents.ts",
+    "agents-official": "ts-node src/agent/run-official-agents.ts",
+    "agents-simple": "ts-node src/agent/run-simple-agents.ts",
+    "agents-lobby": "ts-node src/agent/run-lobby-agents.ts",
+    "agents-game-id": "ts-node src/agent/run-game-id-agents.ts",
+    "agents-robust": "ts-node src/agent/run-robust-agents.ts",
+    "mcp-server": "ts-node src/mcp-server.ts",
+    "mcp-official": "ts-node src/mcp-official-server.ts",
+    "mcp-simple": "ts-node src/mcp-simple-server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@mastra/core": "^0.9.1",
+    "@modelcontextprotocol/sdk": "^1.11.0",
+    "axios": "^1.9.0",
+    "chess.js": "^1.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.3",
+    "@types/socket.io": "^3.0.1",
+    "@types/uuid": "^10.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

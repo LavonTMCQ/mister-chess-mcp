@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Game Browser</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    h1, h2, h3 {
+      color: #333;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .game-list {
+      flex: 1;
+      min-width: 300px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      max-height: 800px;
+      overflow-y: auto;
+    }
+
+    .game-board {
+      flex: 2;
+      min-width: 400px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .game-info {
+      flex: 1;
+      min-width: 300px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .game-browser {
+      margin-bottom: 20px;
+    }
+
+    .game-browser h3 {
+      margin-bottom: 10px;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 5px;
+    }
+
+    .game-item {
+      padding: 15px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .game-item:hover {
+      background-color: #f9f9f9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .game-item.active {
+      background-color: #e8f5e9;
+      border-color: #4CAF50;
+      box-shadow: 0 4px 8px rgba(76,175,80,0.2);
+    }
+
+    .game-item .game-status {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .game-item .game-status.waiting {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
+    .game-item .game-status.active {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .game-item .game-status.completed {
+      background-color: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .board {
+      width: 400px;
+      margin: 0 auto;
+      border: 10px solid #8b5a2b;
+      border-radius: 4px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .board-info {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .move-history {
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .move-history-item {
+      margin-bottom: 8px;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .status-message {
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .status-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chess Game Browser</h1>
+
+  <div id="status-container"></div>
+
+  <div class="container">
+    <div class="game-list">
+      <div class="game-browser">
+        <h3>Active Games</h3>
+        <div id="active-games-container"></div>
+      </div>
+
+      <div class="game-browser">
+        <h3>Waiting Games</h3>
+        <div id="waiting-games-container"></div>
+      </div>
+
+      <div class="game-browser">
+        <h3>Completed Games</h3>
+        <div id="completed-games-container"></div>
+      </div>
+
+      <div class="controls">
+        <button id="refresh-btn">Refresh Games</button>
+        <button id="create-game-btn" onclick="window.location.href='/'">Create Game</button>
+      </div>
+    </div>
+
+    <div class="game-board">
+      <h2>Chess Board</h2>
+      <div id="board" class="board"></div>
+      <div class="board-info" id="board-info">Select a game to view</div>
+    </div>
+
+    <div class="game-info">
+      <h2>Game Information</h2>
+      <div id="game-info-container">
+        <p>Select a game to view details</p>
+      </div>
+
+      <h3>Move History</h3>
+      <div id="move-history" class="move-history">
+        <p>No moves yet</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+  <script>
+    // Game state
+    let games = [];
+    let selectedGame = null;
+    let board = null;
+    let chess = null;
+
+    // API URL - in production this would be set by the server
+    const API_URL = window.MCP_SERVER_URL || 'http://localhost:3001';
+
+    // Show status message
+    function showStatus(message, isError = false) {
+      const statusContainer = $('#status-container');
+      statusContainer.html(`
+        <div class="status-message ${isError ? 'status-error' : 'status-success'}">
+          ${message}
+        </div>
+      `);
+
+      // Clear the message after 5 seconds
+      setTimeout(() => {
+        statusContainer.empty();
+      }, 5000);
+    }
+
+    // Initialize the chess board
+    function initBoard() {
+      // If a board already exists, destroy it
+      if (board) {
+        board.destroy();
+      }
+
+      // Create a new board with the starting position
+      const config = {
+        position: 'start',
+        draggable: false,
+        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+      };
+
+      board = Chessboard('board', config);
+      chess = new Chess();
+
+      // Resize the board to fit the container
+      $(window).resize(() => {
+        board.resize();
+      });
+    }
+
+    // Update the board with a game's position
+    function updateBoard(game) {
+      if (!board) {
+        initBoard();
+      }
+
+      // Update the chess.js instance with the game's FEN
+      chess.load(game.state.fen);
+
+      // Update the board
+      board.position(game.state.fen);
+    }
+
+    // Fetch all games from the MCP server
+    async function fetchGames() {
+      try {
+        // Get all games directly instead of per agent
+        let allGames = [];
+
+        try {
+          // First, try to get all games directly
+          const response = await fetch(`${API_URL}/api/tools/call`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: 'get_all_games',
+              args: {}
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            allGames = data.games;
+          } else {
+            // If the direct method fails, fall back to getting games by agent
+            console.log('Falling back to getting games by agent');
+
+            // Include more agent IDs to cover all possible agents
+            const agentIds = [
+              'agent1', 'agent2', 'agent3', 'agent4',
+              'agent5', 'agent6', 'agent7', 'agent8',
+              'agent9', 'agent10'
+            ];
+
+            // Fetch games for each agent
+            for (const agentId of agentIds) {
+              try {
+                const agentResponse = await fetch(`${API_URL}/api/tools/call`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    name: 'get_player_games',
+                    args: {
+                      playerId: agentId
+                    }
+                  })
+                });
+
+                const agentData = await agentResponse.json();
+
+                if (agentData.success) {
+                  // Add games that aren't already in the list
+                  agentData.games.forEach(game => {
+                    if (!allGames.some(existingGame => existingGame.id === game.id)) {
+                      allGames.push(game);
+                    }
+                  });
+                }
+              } catch (error) {
+                console.error(`Error fetching games for ${agentId}:`, error);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching all games:', error);
+        }
+
+        // Sort games by creation date (newest first)
+        allGames.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+        games = allGames;
+        renderGamesList();
+
+        // Select the first game if available and no game is selected
+        if (games.length > 0 && !selectedGame) {
+          selectGame(games[0]);
+        } else if (selectedGame) {
+          // Update the selected game if it exists
+          const updatedGame = games.find(game => game.id === selectedGame.id);
+          if (updatedGame) {
+            selectGame(updatedGame);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching games:', error);
+        showStatus('Error fetching games: ' + error.message, true);
+      }
+    }
+
+    // Render the list of games
+    function renderGamesList() {
+      const activeContainer = $('#active-games-container');
+      const waitingContainer = $('#waiting-games-container');
+      const completedContainer = $('#completed-games-container');
+
+      activeContainer.empty();
+      waitingContainer.empty();
+      completedContainer.empty();
+
+      if (games.length === 0) {
+        activeContainer.html('<p>No active games available</p>');
+        waitingContainer.html('<p>No waiting games available</p>');
+        completedContainer.html('<p>No completed games available</p>');
+        return;
+      }
+
+      // Filter games by status
+      const activeGames = games.filter(game => game.status === 'active');
+      const waitingGames = games.filter(game => game.status === 'waiting');
+      const completedGames = games.filter(game => game.status === 'completed');
+
+      // Render active games
+      if (activeGames.length === 0) {
+        activeContainer.html('<p>No active games available</p>');
+      } else {
+        activeGames.forEach(game => {
+          const gameElement = createGameElement(game);
+          activeContainer.append(gameElement);
+        });
+      }
+
+      // Render waiting games
+      if (waitingGames.length === 0) {
+        waitingContainer.html('<p>No waiting games available</p>');
+      } else {
+        waitingGames.forEach(game => {
+          const gameElement = createGameElement(game);
+          waitingContainer.append(gameElement);
+        });
+      }
+
+      // Render completed games
+      if (completedGames.length === 0) {
+        completedContainer.html('<p>No completed games available</p>');
+      } else {
+        completedGames.forEach(game => {
+          const gameElement = createGameElement(game);
+          completedContainer.append(gameElement);
+        });
+      }
+    }
+
+    // Create a game element
+    function createGameElement(game) {
+      const moveCount = game.state.history.length;
+      const lastMove = moveCount > 0 ? game.state.history[moveCount - 1] : null;
+
+      const gameElement = $('<div>')
+        .addClass('game-item')
+        .attr('data-id', game.id);
+
+      // Add status badge
+      const statusBadge = $('<div>')
+        .addClass('game-status')
+        .addClass(game.status)
+        .text(game.status.charAt(0).toUpperCase() + game.status.slice(1));
+
+      // Add game content
+      const gameContent = $('<div>').html(`
+        <strong>Game ${game.id.substring(0, 8)}...</strong>
+        <div>White: ${game.whitePlayer || 'Open'}</div>
+        <div>Black: ${game.blackPlayer || 'Open'}</div>
+        <div>
+          Moves: ${moveCount}
+          ${lastMove ? `<br>Last move: ${lastMove.from}-${lastMove.to}` : ''}
+        </div>
+      `);
+
+      // Add active class if this is the selected game
+      if (selectedGame && selectedGame.id === game.id) {
+        gameElement.addClass('active');
+      }
+
+      // Add click handler
+      gameElement.on('click', () => {
+        selectGame(game);
+      });
+
+      // Append elements
+      gameElement.append(statusBadge);
+      gameElement.append(gameContent);
+
+      return gameElement;
+    }
+
+    // Render game information
+    function renderGameInfo(game) {
+      const container = $('#game-info-container');
+      container.empty();
+
+      if (!game) {
+        container.html('<p>Select a game to view details</p>');
+        return;
+      }
+
+      let resultText = '';
+      if (game.status === 'completed') {
+        if (game.result === 'white') {
+          resultText = 'White won by ' + game.resultReason;
+        } else if (game.result === 'black') {
+          resultText = 'Black won by ' + game.resultReason;
+        } else {
+          resultText = 'Game drawn by ' + game.resultReason;
+        }
+      }
+
+      container.html(`
+        <p><strong>Game ID:</strong> ${game.id}</p>
+        <p><strong>White Player:</strong> ${game.whitePlayer}</p>
+        <p><strong>Black Player:</strong> ${game.blackPlayer}</p>
+        <p><strong>Status:</strong> ${game.status}</p>
+        <p><strong>Turn:</strong> ${game.state.turn === 'w' ? 'White' : 'Black'}</p>
+        <p><strong>Check:</strong> ${game.state.isCheck ? 'Yes' : 'No'}</p>
+        <p><strong>Game Over:</strong> ${game.state.isGameOver ? 'Yes' : 'No'}</p>
+        ${resultText ? `<p><strong>Result:</strong> ${resultText}</p>` : ''}
+      `);
+
+      // Update move history
+      renderMoveHistory(game);
+    }
+
+    // Render move history
+    function renderMoveHistory(game) {
+      const container = $('#move-history');
+      container.empty();
+
+      if (!game || game.state.history.length === 0) {
+        container.html('<p>No moves yet</p>');
+        return;
+      }
+
+      const movesList = $('<div>');
+
+      game.state.history.forEach((move, index) => {
+        const moveNumber = Math.floor(index / 2) + 1;
+        const isWhiteMove = index % 2 === 0;
+
+        const moveText = `${moveNumber}. ${isWhiteMove ? '' : '...'} ${move.from}-${move.to}${move.promotion ? '=' + move.promotion.toUpperCase() : ''}`;
+
+        const moveElement = $('<div>')
+          .addClass('move-history-item')
+          .text(moveText);
+
+        movesList.append(moveElement);
+      });
+
+      container.append(movesList);
+    }
+
+    // Select a game
+    function selectGame(game) {
+      selectedGame = game;
+
+      // Update the board
+      updateBoard(game);
+
+      // Update the board info
+      updateBoardInfo(game);
+
+      // Update the game info
+      renderGameInfo(game);
+
+      // Update the games list to highlight the selected game
+      $('.game-item').removeClass('active');
+      $(`.game-item[data-id="${game.id}"]`).addClass('active');
+    }
+
+    // Update the board info
+    function updateBoardInfo(game) {
+      const boardInfo = $('#board-info');
+
+      if (game.state.history.length === 0) {
+        boardInfo.text(`Game ${game.id.substring(0, 8)}... - No moves yet`);
+      } else {
+        const turn = game.state.turn === 'w' ? 'White' : 'Black';
+        boardInfo.text(`Game ${game.id.substring(0, 8)}... - ${turn} to move`);
+      }
+
+      if (game.state.isCheck) {
+        boardInfo.text(boardInfo.text() + ' - CHECK!');
+      }
+
+      if (game.state.isCheckmate) {
+        boardInfo.text(`Game ${game.id.substring(0, 8)}... - CHECKMATE! ${game.state.turn === 'w' ? 'Black' : 'White'} wins!`);
+      }
+
+      if (game.state.isDraw) {
+        boardInfo.text(`Game ${game.id.substring(0, 8)}... - DRAW!`);
+      }
+    }
+
+    // Initialize the application
+    function init() {
+      // Initialize the board
+      initBoard();
+
+      // Fetch games
+      fetchGames();
+
+      // Set up refresh button
+      $('#refresh-btn').on('click', function() {
+        fetchGames();
+      });
+
+      // Set up auto-refresh
+      setInterval(fetchGames, 5000);
+    }
+
+    // Initialize when the document is ready
+    $(document).ready(init);
+  </script>
+</body>
+</html>
